@@ -9,7 +9,7 @@
 <body>
 <button id="titleBtn"></button>
 <div id="trialForm">
-  <span id="trialProgress">0/0</span>
+  <span id="trialProgress"></span>
 </div>
 
 <div id="settingsPanel">
@@ -32,7 +32,7 @@
   <label>Trials: <input id="trialInput" type="number" value="15" min="1" style="width:70px;"></label><br><br>
   <label>Wait Time (ms): <input type="number" id="waitTime" value="2000" min="100" style="width:80px;"></label><br><br>
   <label>Display Time (ms): <input type="number" id="showTime" value="1000" min="100" style="width:80px;"></label><br><br>
-  <label>Stimulus Probability (%): <input type="number" id="prob" value="30" min="1" style="width:80px;"></label><br><br>
+  <label>Expected Value (%): <input type="number" id="expVal" value="30" min="1" style="width:80px;"></label><br><br>
   <button id="closeSettings">Close</button>
 </div>
 
@@ -46,6 +46,9 @@
 <button id="resetBtn" style="visibility: hidden;">Reset</button>
 
 <div id="statsPanel">
+  <div id="totMathces"></div>
+  <div id="totPosMatches"></div>
+  <div id="totAudMathces"></div>
   <div id="totalStats"></div>
   <div id="posStats"></div>
   <div id="audStats"></div>

@@ -193,15 +193,15 @@ input[type=number]::-webkit-outer-spin-button {
 }
 
 .hit {
-    animation: greenflash 1s ease-in-out forwards;
+    animation: greenflash 0.5s ease-in-out forwards;
 }
 
 .incorrect {
-    animation: redflash 1s ease-in-out forwards;
+    animation: redflash 0.5s ease-in-out forwards;
 }
 
 .missed {
-    animation: yellowflash 1s ease-in-out forwards;
+    animation: yellowflash 0.5s ease-in-out forwards;
 }
 
 @keyframes greenflash {

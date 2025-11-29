@@ -5,7 +5,7 @@ const titleBtn = document.getElementById('titleBtn');
 const settingsPanel = document.getElementById('settingsPanel');
 const closeSettings = document.getElementById('closeSettings');
 const closeStats = document.getElementById('closeStats');
-const prob = document.getElementById('prob');
+const expVal = document.getElementById('expVal');
 
 const settingPos = document.getElementById('settingPos');
 const settingAud = document.getElementById('settingAud');
@@ -18,6 +18,9 @@ const statsPanel = document.getElementById('statsPanel');
 const posStats = document.getElementById('posStats');
 const audStats = document.getElementById('audStats');
 const totalStats = document.getElementById('totalStats');
+const totMatches = document.getElementById('totMathces');
+const totPosMatches = document.getElementById('totPosMatches');
+const totAudMathces = document.getElementById('totAudMathces');
 const accuracyStats = document.getElementById('accuracy');
 const btnPos = document.getElementById('btnPos');
 const btnAud = document.getElementById('btnAud');
@@ -34,8 +37,12 @@ let posMatches = 0;
 let audMatches = 0;
 let posCorrects = 0;
 let audCorrects = 0;
+let posIncorrects = 0;
+let audIncorrects = 0;
 let posMissed = false;
 let audMissed = false;
+let totClickedPos = 0;
+let totClickedAud = 0;
 let idxPos = -1;
 let idxAud = -1;
 let posH = null;
@@ -52,9 +59,13 @@ for (let i = 0; i < 9; i++) {
     cells.push(cell);
 }
 
+let ttsReady = false;
 let selectedVoice = null;
+
 function loadVoices() {
     const voices = speechSynthesis.getVoices();
+    if (voices.length === 0) return false;
+
     selectedVoice =
         voices.find(v => v.name.includes("Google UK English Male")) ||
         voices.find(v => v.name.includes("Microsoft Aria")) ||
@@ -62,18 +73,49 @@ function loadVoices() {
         voices.find(v => v.name.includes("Google US English")) ||
         voices.find(v => v.lang === "en-US") ||
         voices[0];
+    return true;
 }
-speechSynthesis.onvoiceschanged = loadVoices;
-loadVoices();
+
+if (!loadVoices()) {
+    speechSynthesis.onvoiceschanged = loadVoices;
+}
+
+function warmUpTTS() {
+    return new Promise(resolve => {
+        const u = new SpeechSynthesisUtterance(" ");
+        u.volume = 0;
+        u.rate = 1.0;
+        u.onend = () => {
+            ttsReady = true;
+            resolve();
+        };
+        speechSynthesis.speak(u);
+    });
+}
 
 function speakLetter(letter) {
-    speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(letter);
     utter.lang = 'en-US';
     utter.rate = 1.1;
     if (selectedVoice) utter.voice = selectedVoice;
     speechSynthesis.speak(utter);
 }
+
+window.addEventListener("load", async () => {
+    if (!loadVoices()) {
+        await new Promise(r => {
+            speechSynthesis.onvoiceschanged = () => {
+                loadVoices();
+                r();
+            };
+        });
+    }
+
+    await warmUpTTS();
+
+    console.log("TTS READY");
+});
+
 
 function updateTitle() {
     if (settingPos.checked === false && settingAud.checked === false) {
@@ -107,8 +149,12 @@ function fullReset() {
     audMatches = 0;
     posCorrects = 0;
     audCorrects = 0;
+    posIncorrects = 0;
+    audIncorrects = 0;
     posMissed = false;
     audMissed = false;
+    totClickedPos = 0;
+    totClickedAud = 0;
     idxPos = -1;
     idxAud = -1;
     posH = null;
@@ -118,6 +164,9 @@ function fullReset() {
     posHistory = [];
     audHistory = [];
     clearGrid();
+    try {
+        speechSynthesis.cancel();
+    } catch (e) {}
     startBtn.textContent = 'Start';
     trialProgress.textContent = `0/${maxTrials}`;
     if (resetBtn) resetBtn.style.visibility = 'hidden';
@@ -128,17 +177,21 @@ if (resetBtn) resetBtn.addEventListener('click', fullReset);
 function updateStats() {
     statsPanel.style.display = 'block';
     let totTried = posMatches + audMatches;
+    let totClicked = totClickedPos + totClickedAud;
     let totCorrect = posCorrects + audCorrects;
-    totalStats.textContent = `Total Correct: ${totCorrect}/${totTried}`;
-    posStats.textContent = `Position: ${posCorrects}/${posMatches}`;
-    audStats.textContent = `Audio: ${audCorrects}/${audMatches}`;
-    accuracyStats.textContent = `Overall Accuracy: ${totTried > 0 ? ((totCorrect / totTried) * 100).toFixed(2) : 0}%`;
+    totMatches.textContent = `Total Matches: ${totTried}/${maxTrials}`;
+    totPosMatches.textContent = `Position Matches: ${posMatches}/${totTried}`;
+    totAudMathces.textContent = `Audio Matches: ${audMatches}/${totTried}`;
+    totalStats.textContent = `Total Correct: ${totCorrect}/${totClicked}`;
+    posStats.textContent = `Position: ${posCorrects}/${totClickedPos}`;
+    audStats.textContent = `Audio: ${audCorrects}/${totClickedAud}`;
+    accuracyStats.textContent = `Overall Accuracy: ${totClicked > 0 ? ((totCorrect / totClicked) * 100).toFixed(2) : 0}%`;
 }
 
 function randExcluding(n, exclude) {
     if (n <= 1) return 0;
     if (exclude == null || exclude < 0 || exclude >= n) return Math.floor(Math.random() * n);
-    const r = Math.floor(Math.random() * (n - 1));
+    let r = Math.floor(Math.random() * (n - 1));
     return r < exclude ? r : r + 1;
 }
 
@@ -162,12 +215,12 @@ function randomFlash() {
     if (posMissed) { btnPos.classList.add('missed'); posMissed = false; }
     if (audMissed) { btnAud.classList.add('missed'); audMissed = false; }
 
-    let p_input = Math.max(0, Math.min(100, parseFloat(prob.value || 0)));
+    let p_input = Math.max(0, Math.min(100, parseInt(expVal.value, 10)));
     let p = p_input / 100;
     let perPos = 0;
     let perAud = 0;
     if (settingPos.checked && settingAud.checked) {
-        perPos = 1 - Math.sqrt(1 - p);
+        perPos = p / 2;
         perAud = perPos;
     } else if (settingPos.checked) {
         perPos = p;
@@ -186,23 +239,15 @@ function randomFlash() {
         } else {
             if (trialIndex > settingN.value && targetPos != null) idxPos = randExcluding(9, targetPos); else idxPos = Math.floor(Math.random() * 9);
         }
-    } else {
-        idxPos = Math.floor(Math.random() * 9);
     }
 
     if (settingAud.checked) {
         if (trialIndex > settingN.value && targetAud != null && Math.random() < perAud) {
             idxAud = letters.indexOf(targetAud);
-            if (idxAud === -1) idxAud = Math.floor(Math.random() * letters.length);
         } else {
-            if (trialIndex > settingN.value && targetAud != null) {
-                const allowed = [];
-                for (let i = 0; i < letters.length; i++) if (letters[i] !== targetAud) allowed.push(i);
-                idxAud = allowed[Math.floor(Math.random() * allowed.length)];
-            } else idxAud = Math.floor(Math.random() * letters.length);
+            if (trialIndex > settingN.value && targetAud != null) idxAud = randExcluding(9, letters.indexOf(targetAud)); else idxAud = Math.floor(Math.random() * 9);
         }
-    } else {
-        idxAud = Math.floor(Math.random() * letters.length);
+        speakLetter(letters[idxAud]);
     }
 
     let currentTargetPos = null;
@@ -218,7 +263,6 @@ function randomFlash() {
             if (!clickPos) posMissed = true;
         }
     }
-
     posHistory.push(idxPos);
     clearGrid();
     if (idxPos >= 0 && idxPos < cells.length) cells[idxPos].classList.add('active');
@@ -230,19 +274,13 @@ function randomFlash() {
             if (!clickAud) audMissed = true;
         }
     }
-
-    speakLetter(letters[idxAud]);
-    audHistory.push(letters[idxAud]);
+    if (settingAud.checked) audHistory.push(letters[idxAud]); else audHistory.push(-1);
 
     posH = currentTargetPos;
     audH = currentTargetAud;
 
     clickPos = false;
     clickAud = false;
-
-    console.log(`Trial ${trialIndex}: Pos ${idxPos} (${posH !== null ? (idxPos === posH ? 'Match' : 'No Match') : 'N/A'}), Aud ${letters[idxAud]} (${audH !== null ? (letters[idxAud] === audH ? 'Match' : 'No Match') : 'N/A'})`);
-    console.log(`Pos History: ${posHistory}`);
-    console.log(`Aud History: ${audHistory}`);
 }
 
 startBtn.addEventListener('click', () => {
@@ -288,9 +326,11 @@ btnPos.addEventListener('click', () => {
         if (posH != null && idxPos === posH) {
             posCorrects++;
             btnPos.classList.add('hit');
-        } else btnPos.classList.add('incorrect');
+        } else { btnPos.classList.add('incorrect'); posIncorrects++; }
+        totClickedPos++;
     }
     clickPos = true;
+    posMissed = false;
 });
 
 btnAud.addEventListener('click', () => {
@@ -298,9 +338,11 @@ btnAud.addEventListener('click', () => {
         if (audH != null && letters[idxAud] === audH) {
             audCorrects++;
             btnAud.classList.add('hit');
-        } else btnAud.classList.add('incorrect');
+        } else { btnAud.classList.add('incorrect'); audIncorrects++; }
+        totClickedAud++;
     }
     clickAud = true;
+    audMissed = false;
 });
 
 btnPos.addEventListener('animationend', () => { btnPos.classList.remove('hit', 'incorrect', 'missed'); });
