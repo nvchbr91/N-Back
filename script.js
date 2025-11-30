@@ -310,7 +310,7 @@ startBtn.addEventListener('click', () => {
         || (waitTime.value <= 0 || Math.floor(waitTime.value) != waitTime.value)
         || (showTime.value <= 0 || Math.floor(showTime.value) != showTime.value)
         || (prob.value < 0 || prob.value > 100 || Math.floor(prob.value) != prob.value)) {
-        alert('Please select at least one mode: Position or Audio.');
+        alert('Please select a valid mode and ensure all settings are correctly filled out.');
         return;
     }
     if (!playing && !paused) {
