@@ -220,7 +220,7 @@ function randomFlash() {
     let perPos = 0;
     let perAud = 0;
     if (settingPos.checked && settingAud.checked) {
-        perPos = p / 2;
+        perPos = 1 - Math.sqrt(1 - p);
         perAud = perPos;
     } else if (settingPos.checked) {
         perPos = p;

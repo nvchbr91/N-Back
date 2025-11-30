@@ -1,61 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="stylesheet" href="style.css" />
-<title>N-Back</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>N-Back</title>
 </head>
+
 <body>
-<button id="titleBtn"></button>
-<div id="trialForm">
-  <span id="trialProgress"></span>
-</div>
 
-<div id="settingsPanel">
-  <div class="toggle-row">
-      <span>Position</span>
-      <label>
-          <input type="checkbox" id="settingPos" checked>
-          <div class="toggle-switch"></div>
-      </label>
-  </div>
+    <button id="titleBtn"></button>
 
-  <div class="toggle-row">
-      <span>Audio</span>
-      <label>
-          <input type="checkbox" id="settingAud" checked>
-          <div class="toggle-switch"></div>
-      </label>
-  </div>
-  <label>N: <input type="number" id="settingN" value="1" min="1" style="width:60px;"></label><br><br>
-  <label>Trials: <input id="trialInput" type="number" value="15" min="1" style="width:70px;"></label><br><br>
-  <label>Wait Time (ms): <input type="number" id="waitTime" value="2000" min="100" style="width:80px;"></label><br><br>
-  <label>Display Time (ms): <input type="number" id="showTime" value="1000" min="100" style="width:80px;"></label><br><br>
-  <label>Stimulus Probability (%): <input type="number" id="prob" value="30" min="1" style="width:80px;"></label><br><br>
-  <button id="closeSettings">Close</button>
-</div>
+    <section id="trialForm">
+        <span id="trialProgress"></span>
+    </section>
 
-<div id="grid"></div>
+    <section id="settingsPanel">
 
-<div id="controls">
-  <button id="btnPos">Position</button>
-  <button id="btnAud">Audio</button>
-</div>
-<button id="startBtn">Start</button>
-<button id="resetBtn" style="visibility: hidden;">Reset</button>
+        <div class="toggle-row">
+            <span>Position</span>
+            <label class="toggle-wrapper">
+                <input type="checkbox" id="settingPos" checked>
+                <div class="toggle-switch"></div>
+            </label>
+        </div>
 
-<div id="statsPanel">
-  <div id="totMathces"></div>
-  <div id="totPosMatches"></div>
-  <div id="totAudMathces"></div>
-  <div id="totalStats"></div>
-  <div id="posStats"></div>
-  <div id="audStats"></div>
-  <div id="accuracy"></div>
-  <button id="closeStats">Close</button>
-</div>
+        <div class="toggle-row">
+            <span>Audio</span>
+            <label class="toggle-wrapper">
+                <input type="checkbox" id="settingAud" checked>
+                <div class="toggle-switch"></div>
+            </label>
+        </div>
 
-<script src="script.js"></script>
+        <div class="settings-group">
+            <label>
+                N:
+                <input type="number" id="settingN" value="1" min="1" class="num-input-small">
+            </label>
+
+            <label>
+                Trials:
+                <input type="number" id="trialInput" value="15" min="1" class="num-input-small">
+            </label>
+
+            <label>
+                Wait Time (ms):
+                <input type="number" id="waitTime" value="2000" min="100" class="num-input-small">
+            </label>
+
+            <label>
+                Display Time (ms):
+                <input type="number" id="showTime" value="1000" min="100" class="num-input-small">
+            </label>
+
+            <label>
+                Stimulus Probability (%):
+                <input type="number" id="prob" value="30" min="1" class="num-input-small">
+            </label>
+        </div>
+
+        <button id="closeSettings">Close</button>
+    </section>
+
+    <div id="grid"></div>
+
+    <div id="controls">
+        <button id="btnPos">Position</button>
+        <button id="btnAud">Audio</button>
+    </div>
+
+    <button id="startBtn">Start</button>
+    <button id="resetBtn" style="visibility: hidden;">Reset</button>
+
+    <section id="statsPanel">
+        <div id="totMathces"></div>
+        <div id="totPosMatches"></div>
+        <div id="totAudMathces"></div>
+        <div id="totalStats"></div>
+        <div id="posStats"></div>
+        <div id="audStats"></div>
+        <div id="accuracy"></div>
+        <button id="closeStats">Close</button>
+    </section>
+
+    <script src="script.js"></script>
 </body>
 </html>
