@@ -24,7 +24,7 @@ const totAudMathces = document.getElementById('totAudMathces');
 const accuracyStats = document.getElementById('accuracy');
 const btnPos = document.getElementById('btnPos');
 const btnAud = document.getElementById('btnAud');
-const letters = ['G', 'H', 'I', 'J', 'K', 'L', 'O', 'S', 'T'];
+const letters = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
 let cells = [];
 let intervalID = null;
