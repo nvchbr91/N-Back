@@ -32,6 +32,7 @@ let playing = false;
 let paused = false;
 let trialIndex = 0;
 let maxTrials = 0;
+let valid = true;
 
 let posMatches = 0;
 let audMatches = 0;
@@ -134,8 +135,19 @@ window.addEventListener("load", async () => {
 function updateTitle() {
     if (settingPos.checked === false && settingAud.checked === false) {
         titleBtn.textContent = `Select Mode`;
+        valid = false;
         return;
     }
+    if ((settingN.value <= 0 || Math.floor(settingN.value) != settingN.value)
+        || (trialInput.value <= 0 || Math.floor(trialInput.value) != trialInput.value)
+        || (waitTime.value <= 0 || Math.floor(waitTime.value) != waitTime.value)
+        || (showTime.value <= 0 || Number(showTime.value) >= Number(waitTime.value) || Math.floor(showTime.value) != showTime.value)
+        || (prob.value < 0 || prob.value > 100 || Math.floor(prob.value) != prob.value)) {
+        valid = false;
+        alert('Please select a valid mode and ensure all settings are correctly filled out.');
+        return;
+    }
+    valid = true;
     let mode = (settingPos.checked && settingAud.checked) ? 'Dual' : 'Single';
     titleBtn.textContent = `${mode} ${settingN.value}-Back`;
     maxTrials = trialInput.value;
@@ -146,6 +158,9 @@ settingPos.addEventListener('change', updateTitle);
 settingAud.addEventListener('change', updateTitle);
 settingN.addEventListener('change', updateTitle);
 trialInput.addEventListener('change', updateTitle);
+waitTime.addEventListener('change', updateTitle);
+showTime.addEventListener('change', updateTitle);
+prob.addEventListener('change', updateTitle);
 
 titleBtn.addEventListener('click', () => { settingsPanel.style.display = 'block'; });
 closeSettings.addEventListener('click', () => { settingsPanel.style.display = 'none'; });
@@ -217,17 +232,6 @@ function randomFlash() {
     if (posMissed) { btnPos.classList.add('missed'); posMissed = false; }
     if (audMissed) { btnAud.classList.add('missed'); audMissed = false; }
 
-    if (trialIndex > maxTrials) {
-        clearInterval(intervalID);
-        intervalID = null;
-        playing = false;
-        paused = true;
-        startBtn.textContent = 'Start';
-        updateStats();
-        fullReset();
-        return;
-    }
-
     let p_input = Math.max(0, Math.min(100, parseInt(prob.value, 10)));
     let p = p_input / 100;
     let perPos = 0;
@@ -243,16 +247,9 @@ function randomFlash() {
 
     let targetPos = null;
     let targetAud = null;
+
     if (posHistory.length >= settingN.value) targetPos = posHistory[posHistory.length - settingN.value];
     if (audHistory.length >= settingN.value) targetAud = audHistory[audHistory.length - settingN.value];
-
-    if (settingPos.checked) {
-        if (trialIndex > settingN.value && targetPos != null && Math.random() < perPos) {
-            idxPos = targetPos;
-        } else {
-            if (trialIndex > settingN.value && targetPos != null) idxPos = randExcluding(9, targetPos); else idxPos = Math.floor(Math.random() * 9);
-        }
-    }
 
     if (settingAud.checked) {
         if (trialIndex > settingN.value && targetAud != null && Math.random() < perAud) {
@@ -262,6 +259,14 @@ function randomFlash() {
         }
         speechSynthesis.cancel();
         speakLetter(letters[idxAud]);
+    }
+
+    if (settingPos.checked) {
+        if (trialIndex > settingN.value && targetPos != null && Math.random() < perPos) {
+            idxPos = targetPos;
+        } else {
+            if (trialIndex > settingN.value && targetPos != null) idxPos = randExcluding(9, targetPos); else idxPos = Math.floor(Math.random() * 9);
+        }
     }
 
     let currentTargetPos = null;
@@ -296,6 +301,16 @@ function randomFlash() {
     clickPos = false;
     clickAud = false;
 
+    if (trialIndex == maxTrials) {
+        clearInterval(intervalID);
+        intervalID = null;
+        playing = false;
+        paused = true;
+        startBtn.textContent = 'Start';
+        updateStats();
+        fullReset();
+    }
+
     console.log(`Trial ${trialIndex}: Position ${idxPos} (Target: ${currentTargetPos}), Audio ${letters[idxAud]} (Target: ${currentTargetAud})`);
     console.log(`History Position: ${posHistory}, History Audio: ${audHistory}`);
     console.log(`Matches so far - Position: ${posMatches}, Audio: ${audMatches}`);
@@ -303,28 +318,17 @@ function randomFlash() {
 }
 
 startBtn.addEventListener('click', () => {
-    if ((settingPos.checked === false && settingAud.checked === false)
-        || (settingN.value <= 0 || Math.floor(settingN.value) != settingN.value)
-        || (trialInput.value <= 0 || Math.floor(trialInput.value) != trialInput.value)
-        || (waitTime.value <= 0 || Math.floor(waitTime.value) != waitTime.value)
-        || (showTime.value <= 0 || Number(showTime.value) >= Number(waitTime.value) || Math.floor(showTime.value) != showTime.value)
-        || (prob.value < 0 || prob.value > 100 || Math.floor(prob.value) != prob.value)) {
+    if (!valid) {
         alert('Please select a valid mode and ensure all settings are correctly filled out.');
         return;
     }
+
     if (!playing && !paused) {
         playing = true;
         paused = false;
         startBtn.textContent = 'Pause';
-        trialIndex = 0;
-        posMatches = 0;
-        audMatches = 0;
-        posCorrects = 0;
-        audCorrects = 0;
-        posHistory = [];
-        audHistory = [];
         statsPanel.style.display = 'none';
-        if (resetBtn) resetBtn.style.visibility = 'visible';
+        resetBtn.style.visibility = 'visible';
         intervalID = setInterval(randomFlash, parseInt(waitTime.value, 10));
         return;
     }
