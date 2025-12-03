@@ -63,19 +63,14 @@ for (let i = 0; i < 9; i++) {
 let ttsReady = false;
 let selectedVoice = null;
 
-function waitForVoices(timeout = 5000) {
+function waitForVoices(timeout = 7000) {
     return new Promise(resolve => {
-        let voices = speechSynthesis.getVoices();
+        const voices = speechSynthesis.getVoices();
         if (voices.length > 0) {
             resolve();
             return;
         }
-
-        const timer = setTimeout(() => {
-            console.warn("Timeout waiting for voices");
-            resolve();
-        }, timeout);
-
+        const timer = setTimeout(() => resolve(), timeout);
         speechSynthesis.onvoiceschanged = () => {
             clearTimeout(timer);
             resolve();
@@ -85,60 +80,61 @@ function waitForVoices(timeout = 5000) {
 
 function getBestVoice() {
     const voices = speechSynthesis.getVoices();
-    if (voices.length === 0) return null;
-
-    return (
-        voices.find(v => v.name.includes("Google UK English Male")) ||
-        voices.find(v => v.name.includes("Microsoft Aria")) ||
-        voices.find(v => v.name.includes("Microsoft Jenny")) ||
-        voices.find(v => v.name.includes("Google US English")) ||
-        voices.find(v => v.lang === "en-US") ||
-        voices[0]
-    );
+    if (!voices || voices.length === 0) return null;
+    const preferred = [
+        "Google UK English Male",
+        "Google US English",
+        "Microsoft Aria",
+        "Microsoft Jenny",
+        "Alex",
+        "Daniel",
+        "Samantha",
+        "Alloy"
+    ];
+    for (const sub of preferred) {
+        const found = voices.find(v => v.name && v.name.includes(sub));
+        if (found) return found;
+    }
+    const enVoice = voices.find(v => typeof v.lang === "string" && v.lang.toLowerCase().startsWith("en"));
+    if (enVoice) return enVoice;
+    return voices[0];
 }
 
 async function warmupTTS() {
     selectedVoice = getBestVoice();
     if (!selectedVoice) return;
-
-    const warm = () => new Promise(resolve => {
+    const warm = (voice) => new Promise(resolve => {
         const u = new SpeechSynthesisUtterance(" ");
         u.volume = 0;
         u.rate = 1;
-        u.voice = selectedVoice;
-        u.onend = u.onerror = () => {
-            ttsReady = true;
-            resolve();
-        };
-        speechSynthesis.cancel();
+        u.pitch = 1;
+        u.voice = voice;
+        u.onend = u.onerror = () => resolve();
+        try { speechSynthesis.cancel(); } catch (e) {}
         speechSynthesis.speak(u);
     });
-
     for (let i = 0; i < 3; i++) {
-        await warm();
-        await new Promise(r => setTimeout(r, 50));
+        await warm(selectedVoice);
+        await new Promise(r => setTimeout(r, 60));
     }
-    console.log("TTS READY - Voice:", selectedVoice.name);
+    ttsReady = true;
 }
 
 function speakLetter(letter) {
     if (!ttsReady || !selectedVoice) return;
-    speechSynthesis.cancel();
-
+    try { speechSynthesis.cancel(); } catch (e) {}
     const utter = new SpeechSynthesisUtterance(letter);
     utter.voice = selectedVoice;
-    utter.lang = selectedVoice.lang;
+    utter.lang = selectedVoice.lang || "en-US";
     utter.rate = 1.0;
     utter.pitch = 1.0;
     utter.volume = 1.0;
-
     speechSynthesis.speak(utter);
 }
 
 window.addEventListener("load", async () => {
     await waitForVoices();
     await warmupTTS();
-    console.log("TTS system initialized.");
 });
 
 function updateTitle() {
