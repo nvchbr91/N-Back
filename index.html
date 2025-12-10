@@ -33,6 +33,22 @@
             </label>
         </div>
 
+        <div class="toggle-row">
+            <span>Number</span>
+            <label class="toggle-wrapper">
+                <input type="checkbox" id="settingNum" unchecked>
+                <div class="toggle-switch"></div>
+            </label>
+        </div>
+
+        <div class="toggle-row">
+            <span>Color</span>
+            <label class="toggle-wrapper">
+                <input type="checkbox" id="settingCol" unchecked>
+                <div class="toggle-switch"></div>
+            </label>
+        </div>
+
         <div class="settings-group">
             <label>
                 N:
@@ -66,8 +82,14 @@
     <div id="grid"></div>
 
     <div id="controls">
-        <button id="btnPos">Position</button>
-        <button id="btnAud">Audio</button>
+        <div>
+            <button id="btnPos">Position</button>
+            <button id="btnAud">Audio</button>
+        </div>
+        <div>
+            <button id="btnNum">Number</button>
+            <button id="btnCol">Color</button>
+        </div>
     </div>
 
     <button id="startBtn">Start</button>
@@ -77,9 +99,13 @@
         <div id="totMathces"></div>
         <div id="totPosMatches"></div>
         <div id="totAudMathces"></div>
+        <div id="totNumMathces"></div>
+        <div id="totColMathces"></div>
         <div id="totalStats"></div>
         <div id="posStats"></div>
         <div id="audStats"></div>
+        <div id="numStats"></div>
+        <div id="colStats"></div>
         <div id="accuracy"></div>
         <button id="closeStats">Close</button>
     </section>

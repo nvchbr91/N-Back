@@ -9,6 +9,8 @@ const prob = document.getElementById('prob');
 
 const settingPos = document.getElementById('settingPos');
 const settingAud = document.getElementById('settingAud');
+const settingNum = document.getElementById('settingNum');
+const settingCol = document.getElementById('settingCol');
 const settingN = document.getElementById('settingN');
 const waitTime = document.getElementById('waitTime');
 const showTime = document.getElementById('showTime');
@@ -24,7 +26,21 @@ const totAudMathces = document.getElementById('totAudMathces');
 const accuracyStats = document.getElementById('accuracy');
 const btnPos = document.getElementById('btnPos');
 const btnAud = document.getElementById('btnAud');
-const letters = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+const btnNum = document.getElementById('btnNum');
+const btnCol = document.getElementById('btnCol');
+const letters = ['C', 'H', 'J', 'K', 'L', 'Q', 'R', 'S', 'T'];
+const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+const colors = [
+    '#e53935',
+    '#1e88e5',
+    '#43a047',
+    '#fb8c00',
+    '#8e24aa',
+    '#00897b',
+    '#d3b11bff',
+    '#d81b60',
+    '#6d4c41'
+];
 
 let cells = [];
 let intervalID = null;
@@ -36,22 +52,41 @@ let valid = true;
 
 let posMatches = 0;
 let audMatches = 0;
+let numMatches = 0;
+let colMatches = 0;
 let posCorrects = 0;
 let audCorrects = 0;
+let numCorrects = 0;
+let colCorrects = 0;
 let posIncorrects = 0;
 let audIncorrects = 0;
+let numIncorrects = 0;
+let colIncorrects = 0;
 let posMissed = false;
 let audMissed = false;
+let numMissed = false;
+let colMissed = false;
 let totClickedPos = 0;
 let totClickedAud = 0;
+let totClickedNum = 0;
+let totClickedCol = 0;
 let idxPos = -1;
 let idxAud = -1;
+let idxNum = -1;
+let idxCol = -1;
 let posH = null;
 let audH = null;
+let numH = null;
+let colH = null;
 let clickPos = false;
 let clickAud = false;
+let clickNum = false;
+let clickCol = false;
 let posHistory = [];
 let audHistory = [];
+let numHistory = [];
+let colHistory = [];
+let checkedModes = 0;
 
 for (let i = 0; i < 9; i++) {
     const cell = document.createElement('div');
@@ -138,11 +173,15 @@ window.addEventListener("load", async () => {
 });
 
 function updateTitle() {
-    if (settingPos.checked === false && settingAud.checked === false) {
+    checkedModes = settingPos.checked + settingAud.checked + settingNum.checked + settingCol.checked;
+    let mode = '';
+
+    if (checkedModes === 0) {
         titleBtn.textContent = `Select Mode`;
         valid = false;
         return;
     }
+
     if ((settingN.value <= 0 || Math.floor(settingN.value) != settingN.value)
         || (trialInput.value <= 0 || Math.floor(trialInput.value) != trialInput.value)
         || (waitTime.value <= 0 || Math.floor(waitTime.value) != waitTime.value)
@@ -152,8 +191,13 @@ function updateTitle() {
         alert('Please select a valid mode and ensure all settings are correctly filled out.');
         return;
     }
+
+    if (checkedModes === 1) mode = 'Single';
+    else if (checkedModes === 2) mode = 'Dual';
+    else if (checkedModes === 3) mode = 'Tri';
+    else if (checkedModes === 4) mode = 'Quad';
+
     valid = true;
-    let mode = (settingPos.checked && settingAud.checked) ? 'Dual' : 'Single';
     titleBtn.textContent = `${mode} ${settingN.value}-Back`;
     maxTrials = trialInput.value;
     trialProgress.textContent = `0/${maxTrials}`;
@@ -161,6 +205,8 @@ function updateTitle() {
 
 settingPos.addEventListener('change', updateTitle);
 settingAud.addEventListener('change', updateTitle);
+settingNum.addEventListener('change', updateTitle);
+settingCol.addEventListener('change', updateTitle);
 settingN.addEventListener('change', updateTitle);
 trialInput.addEventListener('change', updateTitle);
 waitTime.addEventListener('change', updateTitle);
@@ -171,7 +217,12 @@ titleBtn.addEventListener('click', () => { settingsPanel.style.display = 'block'
 closeSettings.addEventListener('click', () => { settingsPanel.style.display = 'none'; });
 closeStats.addEventListener('click', () => { statsPanel.style.display = 'none'; });
 
-function clearGrid() { cells.forEach(c => c.classList.remove('active')); }
+function clearGrid() {
+    cells.forEach(c => c.classList.remove('active'));
+    cells.forEach(c => c.classList.remove('activeNum'));
+    cells.forEach(c => c.textContent = " ");
+    cells.forEach(c => c.removeAttribute("style"));
+}
 
 function fullReset() {
     clearInterval(intervalID);
@@ -181,45 +232,71 @@ function fullReset() {
     trialIndex = 0;
     posMatches = 0;
     audMatches = 0;
+    numMatches = 0;
+    colMatches = 0;
     posCorrects = 0;
     audCorrects = 0;
+    numCorrects = 0;
+    colCorrects = 0;
     posIncorrects = 0;
     audIncorrects = 0;
+    numIncorrects = 0;
+    colIncorrects = 0;
     posMissed = false;
     audMissed = false;
+    numMissed = false;
+    colMissed = false;
     totClickedPos = 0;
     totClickedAud = 0;
+    totClickedNum = 0;
+    totClickedCol = 0;
     idxPos = -1;
     idxAud = -1;
+    idxNum = -1;
+    idxCol = -1;
     posH = null;
     audH = null;
+    numH = null;
+    colH = null;
     clickPos = false;
     clickAud = false;
+    clickNum = false;
+    clickCol = false;
     posHistory = [];
     audHistory = [];
+    numHistory = [];
+    colHistory = [];
+
     clearGrid();
     try {
         speechSynthesis.cancel();
-    } catch (e) {}
+    } catch (e) { }
+
     startBtn.textContent = 'Start';
     trialProgress.textContent = `0/${maxTrials}`;
+
     if (resetBtn) resetBtn.style.visibility = 'hidden';
 }
 
 if (resetBtn) resetBtn.addEventListener('click', fullReset);
 
 function updateStats() {
+    let totTried = posMatches + audMatches + numMatches + colMatches;
+    let totClicked = totClickedPos + totClickedAud + totClickedNum + totClickedCol;
+    let totCorrect = posCorrects + audCorrects + numCorrects + colCorrects;
+    let samples = totClicked <= totTried ? totTried : totClicked;
+
     statsPanel.style.display = 'block';
-    let totTried = posMatches + audMatches;
-    let totClicked = totClickedPos + totClickedAud;
-    let totCorrect = posCorrects + audCorrects;
-    samples = totClicked <= totTried ? totTried : totClicked;
     totMatches.textContent = `Total Matches: ${totTried}/${maxTrials}`;
     totPosMatches.textContent = `Position Matches: ${posMatches}/${totTried}`;
     totAudMathces.textContent = `Audio Matches: ${audMatches}/${totTried}`;
+    totNumMathces.textContent = `Number Matches: ${numMatches}/${totTried}`;
+    totColMathces.textContent = `Color Matches: ${colMatches}/${totTried}`;
     totalStats.textContent = `Total Correct: ${totCorrect}/${totTried}`;
     posStats.textContent = `Position: ${posCorrects}/${posMatches}`;
     audStats.textContent = `Audio: ${audCorrects}/${audMatches}`;
+    numStats.textContent = `Number: ${numCorrects}/${numMatches}`;
+    colStats.textContent = `Color: ${colCorrects}/${colMatches}`;
     accuracyStats.textContent = `Overall Accuracy: ${samples > 0 ? Math.round((totCorrect / samples) * 100) : 0}%`;
 }
 
@@ -236,6 +313,8 @@ function randomFlash() {
 
     if (posMissed) { btnPos.classList.add('missed'); posMissed = false; }
     if (audMissed) { btnAud.classList.add('missed'); audMissed = false; }
+    if (numMissed) { btnNum.classList.add('missed'); numMissed = false; }
+    if (colMissed) { btnCol.classList.add('missed'); colMissed = false; }
 
     if (trialIndex > maxTrials) {
         clearInterval(intervalID);
@@ -250,25 +329,25 @@ function randomFlash() {
 
     let p_input = Math.max(0, Math.min(100, parseInt(prob.value, 10)));
     let p = p_input / 100;
-    let perPos = 0;
-    let perAud = 0;
-    if (settingPos.checked && settingAud.checked) {
-        perPos = 1 - Math.sqrt(1 - p);
-        perAud = perPos;
-    } else if (settingPos.checked) {
-        perPos = p;
-    } else if (settingAud.checked) {
-        perAud = p;
+
+    if (checkedModes === 4) {
+        p = 1 - Math.pow(1 - p, 1 / 4);
+    } else if (checkedModes === 3) {
+        p = 1 - Math.pow(1 - p, 1 / 3);
+    } else if (checkedModes === 2) {
+        p = 1 - Math.pow(1 - p, 1 / 2);
     }
 
     let targetPos = null;
     let targetAud = null;
+    let targetNum = null;
+    let targetCol = null;
 
     if (posHistory.length >= settingN.value) targetPos = posHistory[posHistory.length - settingN.value];
     if (audHistory.length >= settingN.value) targetAud = audHistory[audHistory.length - settingN.value];
 
     if (settingAud.checked) {
-        if (trialIndex > settingN.value && targetAud != null && Math.random() < perAud) {
+        if (trialIndex > settingN.value && targetAud != null && Math.random() < p) {
             idxAud = letters.indexOf(targetAud);
         } else {
             if (trialIndex > settingN.value && targetAud != null) idxAud = randExcluding(9, letters.indexOf(targetAud)); else idxAud = Math.floor(Math.random() * 9);
@@ -278,18 +357,39 @@ function randomFlash() {
     }
 
     if (settingPos.checked) {
-        if (trialIndex > settingN.value && targetPos != null && Math.random() < perPos) {
+        if (trialIndex > settingN.value && targetPos != null && Math.random() < p) {
             idxPos = targetPos;
         } else {
             if (trialIndex > settingN.value && targetPos != null) idxPos = randExcluding(9, targetPos); else idxPos = Math.floor(Math.random() * 9);
         }
     }
 
+    if (settingNum.checked) {
+        if (trialIndex > settingN.value && targetNum != null && Math.random() < p) {
+            idxNum = numbers.indexOf(targetNum);
+        } else {
+            if (trialIndex > settingN.value && targetNum != null) idxNum = randExcluding(9, numbers.indexOf(targetNum)); else idxNum = Math.floor(Math.random() * 9);
+        }
+    }
+
+    if (settingCol.checked) {
+        if (trialIndex > settingN.value && targetCol != null && Math.random() < p) {
+            idxCol = colors.indexOf(targetCol);
+        } else {
+            if (trialIndex > settingN.value && targetCol != null) idxCol = randExcluding(9, colors.indexOf(targetCol)); else idxCol = Math.floor(Math.random() * 9);
+        }
+    }
+
     let currentTargetPos = null;
     let currentTargetAud = null;
+    let currentTargetNum = null;
+    let currentTargetCol = null;
+
     if (trialIndex > settingN.value) {
         if (posHistory.length >= settingN.value) currentTargetPos = posHistory[posHistory.length - settingN.value];
         if (audHistory.length >= settingN.value) currentTargetAud = audHistory[audHistory.length - settingN.value];
+        if (numHistory.length >= settingN.value) currentTargetNum = numHistory[numHistory.length - settingN.value];
+        if (colHistory.length >= settingN.value) currentTargetCol = colHistory[colHistory.length - settingN.value];
     }
 
     if (settingPos.checked && trialIndex > settingN.value) {
@@ -299,9 +399,6 @@ function randomFlash() {
         }
     }
     posHistory.push(idxPos);
-    clearGrid();
-    if (idxPos >= 0 && idxPos < cells.length) cells[idxPos].classList.add('active');
-    setTimeout(() => { if (idxPos >= 0 && idxPos < cells.length) cells[idxPos].classList.remove('active'); }, parseInt(showTime.value, 10));
 
     if (settingAud.checked && trialIndex > settingN.value) {
         if (letters[idxAud] === currentTargetAud) {
@@ -311,16 +408,48 @@ function randomFlash() {
     }
     if (settingAud.checked) audHistory.push(letters[idxAud]); else audHistory.push(-1);
 
+    if (settingNum.checked && trialIndex > settingN.value) {
+        if (numbers[idxNum] === currentTargetNum) {
+            numMatches++;
+            if (!clickNum) numMissed = true;
+        }
+    }
+    if (settingNum.checked) numHistory.push(numbers[idxNum]); else numHistory.push(-1);
+
+    if (settingCol.checked && trialIndex > settingN.value) {
+        if (colors[idxCol] === currentTargetCol) {
+            colMatches++;
+            if (!clickCol) colMissed = true;
+        }
+    }
+    if (settingCol.checked) colHistory.push(colors[idxCol]); else colHistory.push(-1);
+
+    clearGrid();
+
+    if (idxPos >= 0 && idxPos < cells.length) {
+        cells[idxPos].classList.add('active');
+
+        if (idxNum >= 0) {
+            cells[idxPos].classList.add('activeNum');
+            cells[idxPos].textContent = numbers[idxNum];
+        }
+
+        if (idxCol >= 0) {
+            cells[idxPos].style.background = colors[idxCol];
+        }
+    }
+
+    setTimeout(() => { if (idxPos >= 0 && idxPos < cells.length) clearGrid(); }, parseInt(showTime.value, 10));
+
     posH = currentTargetPos;
     audH = currentTargetAud;
+    numH = currentTargetNum;
+    colH = currentTargetCol;
 
     clickPos = false;
     clickAud = false;
-
-    console.log(`Trial ${trialIndex}: Position ${idxPos} (Target: ${currentTargetPos}), Audio ${letters[idxAud]} (Target: ${currentTargetAud})`);
-    console.log(`History Position: ${posHistory}, History Audio: ${audHistory}`);
-    console.log(`Matches so far - Position: ${posMatches}, Audio: ${audMatches}`);
-    console.log(`Correct so far - Position: ${posCorrects}, Audio: ${audCorrects}`);
+    clickNum = false;
+    clickCol = false;
 }
 
 startBtn.addEventListener('click', () => {
@@ -379,7 +508,54 @@ btnAud.addEventListener('click', () => {
     audMissed = false;
 });
 
+btnNum.addEventListener('click', () => {
+    if (settingNum.checked && playing && !clickNum) {
+        if (numH != null && numbers[idxNum] === numH) {
+            numCorrects++;
+            btnNum.classList.add('hit');
+        } else { btnNum.classList.add('incorrect'); numIncorrects++; }
+        totClickedNum++;
+    }
+    if (!paused && playing) clickNum = true;
+    numMissed = false;
+});
+
+btnCol.addEventListener('click', () => {
+    if (settingCol.checked && playing && !clickCol) {
+        if (colH != null && colors[idxCol] === colH) {
+            colCorrects++;
+            btnCol.classList.add('hit');
+        } else { btnCol.classList.add('incorrect'); colIncorrects++; }
+        totClickedCol++;
+    }
+    if (!paused && playing) clickCol = true;
+    colMissed = false;
+});
+
 btnPos.addEventListener('animationend', () => { btnPos.classList.remove('hit', 'incorrect', 'missed'); });
 btnAud.addEventListener('animationend', () => { btnAud.classList.remove('hit', 'incorrect', 'missed'); });
+btnNum.addEventListener('animationend', () => { btnNum.classList.remove('hit', 'incorrect', 'missed'); });
+btnCol.addEventListener('animationend', () => { btnCol.classList.remove('hit', 'incorrect', 'missed'); });
+
+document.addEventListener("keydown", (event) => {
+    if (!playing || paused) return;
+
+    switch (event.key.toLowerCase()) {
+        case 'w':
+            btnPos.click();
+            break;
+        case 'a':
+            btnAud.click();
+            break;
+        case 's':
+            btnNum.click();
+            break;
+        case 'd':
+            btnCol.click();
+            break;
+    }
+});
 
 updateTitle();
+
+console.log(`W: Position \nA: Audio\nS: Number \nD: Color`)
