@@ -547,24 +547,28 @@ btnNum.addEventListener('animationend', () => { btnNum.classList.remove('hit', '
 btnCol.addEventListener('animationend', () => { btnCol.classList.remove('hit', 'incorrect', 'missed'); });
 
 document.addEventListener("keydown", (event) => {
-    if (!playing || paused) return;
-
     switch (event.key.toLowerCase()) {
-        case 'w':
+        case 'q':
             btnPos.click();
             break;
-        case 'a':
+        case 'w':
             btnAud.click();
             break;
-        case 's':
+        case 'a':
             btnNum.click();
             break;
-        case 'd':
+        case 's':
             btnCol.click();
+            break;
+        case 'f':
+            startBtn.click();
+            break;
+        case 'r':
+            resetBtn.click();
             break;
     }
 });
 
 updateTitle();
 
-console.log(`W: Position \nA: Audio\nS: Number \nD: Color`)
+console.log(`W: Position \nA: Audio\nS: Number \nD: Color \nF: Start/Pause \nR: Reset`)
