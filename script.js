@@ -437,9 +437,18 @@ function randomFlash() {
         if (idxCol >= 0) {
             cells[idxPos].style.background = colors[idxCol];
         }
+    } else {
+        if (idxNum >= 0) {
+            cells[4].classList.add('activeNum');
+            cells[4].textContent = numbers[idxNum];
+        }
+
+        if (idxCol >= 0) {
+            cells[4].style.background = colors[idxCol];
+        }
     }
 
-    setTimeout(() => { if (idxPos >= 0 && idxPos < cells.length) clearGrid(); }, parseInt(showTime.value, 10));
+    setTimeout(() => { clearGrid(); }, parseInt(showTime.value, 10));
 
     posH = currentTargetPos;
     audH = currentTargetAud;
