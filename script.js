@@ -563,4 +563,4 @@ document.addEventListener("keydown", (event) => {
 
 updateTitle();
 
-console.log(`W: Position \nA: Audio\nS: Number \nD: Color \nF: Start/Pause \nR: Reset`)
+console.log(`Q: Position \nW: Audio\nA: Number \nS: Color \nF: Start/Pause \nR: Reset`)
