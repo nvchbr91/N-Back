@@ -343,8 +343,12 @@ function randomFlash() {
     let targetNum = null;
     let targetCol = null;
 
-    if (posHistory.length >= settingN.value) targetPos = posHistory[posHistory.length - settingN.value];
-    if (audHistory.length >= settingN.value) targetAud = audHistory[audHistory.length - settingN.value];
+    if (trialIndex > settingN.value) {
+        if (posHistory.length >= settingN.value) targetPos = posHistory[posHistory.length - settingN.value];
+        if (audHistory.length >= settingN.value) targetAud = audHistory[audHistory.length - settingN.value];
+        if (numHistory.length >= settingN.value) targetNum = numHistory[numHistory.length - settingN.value];
+        if (colHistory.length >= settingN.value) targetCol = colHistory[colHistory.length - settingN.value];
+    }
 
     if (settingAud.checked) {
         if (trialIndex > settingN.value && targetAud != null && Math.random() < p) {
@@ -380,20 +384,8 @@ function randomFlash() {
         }
     }
 
-    let currentTargetPos = null;
-    let currentTargetAud = null;
-    let currentTargetNum = null;
-    let currentTargetCol = null;
-
-    if (trialIndex > settingN.value) {
-        if (posHistory.length >= settingN.value) currentTargetPos = posHistory[posHistory.length - settingN.value];
-        if (audHistory.length >= settingN.value) currentTargetAud = audHistory[audHistory.length - settingN.value];
-        if (numHistory.length >= settingN.value) currentTargetNum = numHistory[numHistory.length - settingN.value];
-        if (colHistory.length >= settingN.value) currentTargetCol = colHistory[colHistory.length - settingN.value];
-    }
-
     if (settingPos.checked && trialIndex > settingN.value) {
-        if (idxPos === currentTargetPos) {
+        if (idxPos === targetPos) {
             posMatches++;
             if (!clickPos) posMissed = true;
         }
@@ -401,7 +393,7 @@ function randomFlash() {
     posHistory.push(idxPos);
 
     if (settingAud.checked && trialIndex > settingN.value) {
-        if (letters[idxAud] === currentTargetAud) {
+        if (letters[idxAud] === targetAud) {
             audMatches++;
             if (!clickAud) audMissed = true;
         }
@@ -409,7 +401,7 @@ function randomFlash() {
     if (settingAud.checked) audHistory.push(letters[idxAud]); else audHistory.push(-1);
 
     if (settingNum.checked && trialIndex > settingN.value) {
-        if (numbers[idxNum] === currentTargetNum) {
+        if (numbers[idxNum] === targetNum) {
             numMatches++;
             if (!clickNum) numMissed = true;
         }
@@ -417,7 +409,7 @@ function randomFlash() {
     if (settingNum.checked) numHistory.push(numbers[idxNum]); else numHistory.push(-1);
 
     if (settingCol.checked && trialIndex > settingN.value) {
-        if (colors[idxCol] === currentTargetCol) {
+        if (colors[idxCol] === targetCol) {
             colMatches++;
             if (!clickCol) colMissed = true;
         }
@@ -450,10 +442,10 @@ function randomFlash() {
 
     setTimeout(() => { clearGrid(); }, parseInt(showTime.value, 10));
 
-    posH = currentTargetPos;
-    audH = currentTargetAud;
-    numH = currentTargetNum;
-    colH = currentTargetCol;
+    posH = targetPos;
+    audH = targetAud;
+    numH = targetNum;
+    colH = targetCol;
 
     clickPos = false;
     clickAud = false;
