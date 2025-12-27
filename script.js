@@ -95,35 +95,41 @@ for (let i = 0; i < 9; i++) {
     cells.push(cell);
 }
 
-const audioMap = {};
-letters.forEach(letter => {
-    const lower = letter.toLowerCase();
-    audioMap[letter] = new Audio(`sounds/${lower}.mp3`);
-    audioMap[letter].preload = 'auto';
-});
+const AudioEngine = (() => {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const buffers = new Map();
 
-async function warmupAudio() {
-    for (const letter of letters) {
-        const audio = audioMap[letter];
-        audio.volume = 0;
-        await audio.play().catch(() => {});
-        audio.pause();
-        audio.currentTime = 0;
-        audio.volume = 1;
-        await new Promise(r => setTimeout(r, 100));
+    async function load(letter) {
+        const res = await fetch(`audio/${letter.toLowerCase()}.wav`);
+        const arr = await res.arrayBuffer();
+        const buf = await ctx.decodeAudioData(arr);
+        buffers.set(letter, buf);
     }
-}
 
-function playLetter(letter) {
-    if (!audioMap[letter]) return;
-    const audio = audioMap[letter];
-    audio.pause();
-    audio.currentTime = 0;
-    audio.play().catch(e => console.error('Audio play error:', e));
-}
+    async function preloadAll(letters) {
+        for (const l of letters) {
+            await load(l);
+        }
+    }
+
+    function play(letter) {
+        const buf = buffers.get(letter);
+        if (!buf) return;
+
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(ctx.destination);
+        src.start();
+    }
+
+    return {
+        preloadAll,
+        play
+    };
+})();
 
 window.addEventListener("load", async () => {
-    await warmupAudio();
+    await AudioEngine.preloadAll(letters);
 });
 
 function updateTitle() {
@@ -222,6 +228,9 @@ function fullReset() {
     colHistory = [];
 
     clearGrid();
+    try {
+        speechSynthesis.cancel();
+    } catch (e) { }
 
     startBtn.textContent = 'Start';
     trialProgress.textContent = `0/${maxTrials}`;
@@ -307,7 +316,7 @@ function randomFlash() {
         } else {
             if (trialIndex > settingN.value && targetAud != null) idxAud = randExcluding(9, letters.indexOf(targetAud)); else idxAud = Math.floor(Math.random() * 9);
         }
-        playLetter(letters[idxAud]);
+        AudioEngine.play(letters[idxAud]);
     }
 
     if (settingPos.checked) {
