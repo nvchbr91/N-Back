@@ -95,81 +95,35 @@ for (let i = 0; i < 9; i++) {
     cells.push(cell);
 }
 
-let ttsReady = false;
-let selectedVoice = null;
+const audioMap = {};
+letters.forEach(letter => {
+    const lower = letter.toLowerCase();
+    audioMap[letter] = new Audio(`sounds/${lower}.mp3`);
+    audioMap[letter].preload = 'auto';
+});
 
-function waitForVoices(timeout = 7000) {
-    return new Promise(resolve => {
-        const voices = speechSynthesis.getVoices();
-        if (voices.length > 0) {
-            resolve();
-            return;
-        }
-        const timer = setTimeout(() => resolve(), timeout);
-        speechSynthesis.onvoiceschanged = () => {
-            clearTimeout(timer);
-            resolve();
-        };
-    });
-}
-
-function getBestVoice() {
-    const voices = speechSynthesis.getVoices();
-    if (!voices || voices.length === 0) return null;
-    const preferred = [
-        "Google UK English Male",
-        "Google US English",
-        "Microsoft Aria",
-        "Microsoft Jenny",
-        "Alex",
-        "Daniel",
-        "Samantha",
-        "Alloy"
-    ];
-    for (const sub of preferred) {
-        const found = voices.find(v => v.name && v.name.includes(sub));
-        if (found) return found;
+async function warmupAudio() {
+    for (const letter of letters) {
+        const audio = audioMap[letter];
+        audio.volume = 0;
+        await audio.play().catch(() => {});
+        audio.pause();
+        audio.currentTime = 0;
+        audio.volume = 1;
+        await new Promise(r => setTimeout(r, 100));
     }
-    const enVoice = voices.find(v => typeof v.lang === "string" && v.lang.toLowerCase().startsWith("en"));
-    if (enVoice) return enVoice;
-    return voices[0];
 }
 
-async function warmupTTS() {
-    selectedVoice = getBestVoice();
-    if (!selectedVoice) return;
-    const warm = (voice) => new Promise(resolve => {
-        const u = new SpeechSynthesisUtterance(" ");
-        u.volume = 0;
-        u.rate = 1;
-        u.pitch = 1;
-        u.voice = voice;
-        u.onend = u.onerror = () => resolve();
-        try { speechSynthesis.cancel(); } catch (e) {}
-        speechSynthesis.speak(u);
-    });
-    for (let i = 0; i < 3; i++) {
-        await warm(selectedVoice);
-        await new Promise(r => setTimeout(r, 60));
-    }
-    ttsReady = true;
-}
-
-function speakLetter(letter) {
-    if (!ttsReady || !selectedVoice) return;
-    try { speechSynthesis.cancel(); } catch (e) {}
-    const utter = new SpeechSynthesisUtterance(letter);
-    utter.voice = selectedVoice;
-    utter.lang = selectedVoice.lang || "en-US";
-    utter.rate = 1.0;
-    utter.pitch = 1.0;
-    utter.volume = 1.0;
-    speechSynthesis.speak(utter);
+function playLetter(letter) {
+    if (!audioMap[letter]) return;
+    const audio = audioMap[letter];
+    audio.pause();
+    audio.currentTime = 0;
+    audio.play().catch(e => console.error('Audio play error:', e));
 }
 
 window.addEventListener("load", async () => {
-    await waitForVoices();
-    await warmupTTS();
+    await warmupAudio();
 });
 
 function updateTitle() {
@@ -268,9 +222,6 @@ function fullReset() {
     colHistory = [];
 
     clearGrid();
-    try {
-        speechSynthesis.cancel();
-    } catch (e) { }
 
     startBtn.textContent = 'Start';
     trialProgress.textContent = `0/${maxTrials}`;
@@ -356,8 +307,7 @@ function randomFlash() {
         } else {
             if (trialIndex > settingN.value && targetAud != null) idxAud = randExcluding(9, letters.indexOf(targetAud)); else idxAud = Math.floor(Math.random() * 9);
         }
-        speechSynthesis.cancel();
-        speakLetter(letters[idxAud]);
+        playLetter(letters[idxAud]);
     }
 
     if (settingPos.checked) {
