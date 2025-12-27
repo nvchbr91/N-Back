@@ -100,7 +100,7 @@ const AudioEngine = (() => {
     const buffers = new Map();
 
     async function load(letter) {
-        const res = await fetch(`./audio/${letter.toLowerCase()}.wav`);
+        const res = await fetch(`./sounds/${letter.toLowerCase()}.wav`);
         const arr = await res.arrayBuffer();
         const buf = await ctx.decodeAudioData(arr);
         buffers.set(letter, buf);
