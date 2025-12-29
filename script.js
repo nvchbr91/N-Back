@@ -148,9 +148,9 @@ class NBackGame {
     }
 
     async init() {
-        await this.audio.preload(RESOURCES.letters);
         this.bindEvents();
         this.updateConfig();
+        await this.audio.preload(RESOURCES.letters);
         console.log("Game Ready");
     }
 
