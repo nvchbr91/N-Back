@@ -152,6 +152,7 @@ class NBackGame {
         this.updateConfig();
         await this.audio.preload(RESOURCES.letters);
         console.log("Game Ready");
+        console.log('To pass the level, you must achieve at least 100% accuracy in at least 5 out of your last 10 plays.')
     }
 
     bindEvents() {
